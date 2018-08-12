@@ -7,4 +7,4 @@ DeepResearch is the collection of new and prolific algorithms in the field of **
 ## Papers
 |Paper|Code|Tutorial|Any Other links|
 |-----|----|--------|---------------|
-|[Hierarchical Attention Networks](http://www.cs.cmu.edu/~./hovy/papers/16HLT-hierarchical-attention-networks.pdf)|[code](./Hierarchical Attention Network/)| | |
+|[Hierarchical Attention Networks](http://www.cs.cmu.edu/~./hovy/papers/16HLT-hierarchical-attention-networks.pdf)|[code](Hierarchical Attention Network/README.md)| | |

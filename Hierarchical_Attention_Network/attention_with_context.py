@@ -1,3 +1,12 @@
+from keras.preprocessing.text import Tokenizer,  text_to_word_sequence
+from keras.engine.topology import Layer
+from keras import initializers as initializers, regularizers, constraints
+from keras.callbacks import Callback, ModelCheckpoint
+from keras.utils.np_utils import to_categorical
+from keras.layers import Embedding, Input, Dense, LSTM, GRU, Bidirectional, TimeDistributed
+from keras import backend as K
+from keras import optimizers
+from keras.models import Model
 def dot_product(x, kernel):
     """
     Wrapper for dot product operation, in order to be compatible with both
@@ -106,4 +115,4 @@ class AttentionWithContext(Layer):
         return K.sum(weighted_input, axis=1)
 
     def compute_output_shape(self, input_shape):
-        return input_shape[0], input_shape[-1
+        return input_shape[0], input_shape[-1]

@@ -20,8 +20,9 @@ from sklearn.utils import shuffle
 import re
 
 class HAN(object):
-    def __init__(self, text, labels, pretrained_embedded_vector_path, max_features, max_senten_len, max_senten_num, embedding_size, validation_split = 0.2, verbose = 0):
+    def __init__(self, text, labels, pretrained_embedded_vector_path, max_features, max_senten_len, max_senten_num, embedding_size, num_categories=None, validation_split=0.2, verbose=0):
         try:
+            self.verbose = verbose
             self.max_features = max_features
             self.max_senten_len = max_senten_len
             self.max_senten_num = max_senten_num
@@ -30,8 +31,10 @@ class HAN(object):
             self.embedded_dir = pretrained_embedded_vector_path
             self.text = pd.Series(text)
             self.categories = pd.Series(labels)
-            self.classes = self.labels.unique().tolist()
-            assert (self.text.shape[0] == self.labels.shape[0])
+            self.classes = self.categories.unique().tolist()
+            if num_categories is not None:
+                assert (num_categories == len(self.classes))
+            assert (self.text.shape[0] == self.categories.shape[0])
             self.data, self.labels = self.preprocessing()
             self.x_train, self.y_train, self.x_val, self.y_val = self.split_dataset()
             self.embedding_index = self.add_glove_model()
@@ -53,8 +56,6 @@ class HAN(object):
         paras = []
         labels = []
         texts = []
-        max_sent_len_exist = 0
-        max_sent_num_exist = 0
         for idx in range(self.text.shape[0]):
             text = self.clean_string(self.text[idx])
             texts.append(text)
@@ -66,35 +67,35 @@ class HAN(object):
                          self.max_senten_len), dtype='int32')
         for i, sentences in enumerate(paras):
             for j, sent in enumerate(sentences):
-                if j < max_senten_num:
+                if j < self.max_senten_num:
                     wordTokens = text_to_word_sequence(sent)
                     k = 0
                     for _, word in enumerate(wordTokens):
-                        if k < max_senten_len and tokenizer.word_index[word] < max_features:
+                        if k < self.max_senten_len and tokenizer.word_index[word] < self.max_features:
                             data[i, j, k] = tokenizer.word_index[word]
                             k = k+1
-        word_index = tokenizer.word_index
+        self.word_index = tokenizer.word_index
         if self.verbose == 1:
-            print('Total %s unique tokens.' % len(word_index))
+            print('Total %s unique tokens.' % len(self.word_index))
         labels = pd.get_dummies(self.categories)
         if self.verbose == 1:
             print('Shape of data tensor:', data.shape)
             print('Shape of labels tensor:', labels.shape)
         assert (len(self.classes) == labels.shape[1])
-        assert (data.shape[0] = labels.shape[0])
+        assert (data.shape[0] == labels.shape[0])
         return data, labels
     
     def split_dataset(self):
-        indices = np.arange(data.shape[0])
+        indices = np.arange(self.data.shape[0])
         np.random.shuffle(indices)
-        data = data[indices]
-        labels = labels.iloc[indices]
-        nb_validation_samples = int(self.validation_split * data.shape[0])
+        self.data = self.data[indices]
+        self.labels = self.labels.iloc[indices]
+        nb_validation_samples = int(self.validation_split * self.data.shape[0])
 
-        x_train = data[:-nb_validation_samples]
-        y_train = labels[:-nb_validation_samples]
-        x_val = data[-nb_validation_samples:]
-        y_val = labels[-nb_validation_samples:]
+        x_train = self.data[:-nb_validation_samples]
+        y_train = self.labels[:-nb_validation_samples]
+        x_val = self.data[-nb_validation_samples:]
+        y_val = self.labels[-nb_validation_samples:]
         if self.verbose == 1:
             print('Number of positive and negative reviews in traing and validation set')
             print(y_train.columns.tolist())
@@ -108,7 +109,7 @@ class HAN(object):
     def add_glove_model(self):
         embeddings_index = {}
         try:
-            f = open(self.glove_dir)
+            f = open(self.embedded_dir)
             for line in f:
                 try:
                     values = line.split()
@@ -118,16 +119,16 @@ class HAN(object):
                 except:
                     pass
             f.close()
-        except FileNotFoundError:
+        except OSError:
             print('Embedded file does not found')
             exit()
         return embeddings_index
     
     def get_embedding_matrix(self):
-        embedding_matrix = np.random.random((len(word_index) + 1, embed_size))
+        embedding_matrix = np.random.random((len(self.word_index) + 1, self.embed_size))
         absent_words = 0
-        for word, i in word_index.items():
-            embedding_vector = self.embeddings_index.get(word)
+        for word, i in self.word_index.items():
+            embedding_vector = self.embedding_index.get(word)
             if embedding_vector is not None:
                 # words not found in embedding index will be all-zeros.
                 embedding_matrix[i] = embedding_vector
@@ -135,16 +136,16 @@ class HAN(object):
                 absent_words += 1
         if self.verbose == 1:
             print('Total absent words are', absent_words, 'which is', "%0.2f" %
-                (absent_words * 100 / len(word_index)), '% of total words')
+                (absent_words * 100 / len(self.word_index)), '% of total words')
         return embedding_matrix
     
     def get_embedding_layer(self):
-        embedding_matrix = get_embedding_layer(self.verbose)
-        return Embedding(len(word_index) + 1, self.embed_size, weights=[embedding_matrix], input_length=self.max_senten_len, trainable=False)
+        embedding_matrix = self.get_embedding_matrix()
+        return Embedding(len(self.word_index) + 1, self.embed_size, weights=[embedding_matrix], input_length=self.max_senten_len, trainable=False)
 
     def set_model(self):
         word_input = Input(shape=(self.max_senten_len,), dtype='float32')
-        word_sequences = get_embedding_layer()(word_input)
+        word_sequences = self.get_embedding_layer()(word_input)
         word_lstm = Bidirectional(LSTM(100, return_sequences=True))(word_sequences)
         word_dense = TimeDistributed(Dense(200))(word_lstm)
         word_att = AttentionWithContext()(word_dense)
@@ -157,34 +158,33 @@ class HAN(object):
         sent_att = AttentionWithContext()(sent_dense)
         preds = Dense(len(self.classes))(sent_att)
         self.model = Model(sent_input, preds)
-        self.model.compile(loss='categorical_crossentropy',
-                      optimizer='adam', metrics=['accuracy'])
+        self.model.compile(loss='categorical_crossentropy',optimizer='adam', metrics=['accuracy'])
         
-        def train_model(self, best_model_path = None, final_model_path = None, plot_learning_curve = True):
-            if save_best_model is not None:
-                checkpoint = ModelCheckpoint(best_model_path, verbose=0, monitor='val_loss', save_best_only=True, mode='auto')
-            self.history = model.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=80, batch_size=86, verbose = self.verbose, callbacks = [checkpoint])
-            if plot_learning_curve:
-                plot_results()
-            if final_model_path is not None:
-                self.model.save(final_model_path)
+    def train_model(self, epochs, batch_size, best_model_path = None, final_model_path = None, plot_learning_curve = True):
+        if best_model_path is not None:
+            checkpoint = ModelCheckpoint(best_model_path, verbose=0, monitor='val_loss', save_best_only=True, mode='auto')
+        self.history = self.model.fit(self.x_train, self.y_train, validation_data=(self.x_val, self.y_val), epochs=epochs, batch_size=batch_size, verbose = self.verbose, callbacks = [checkpoint])
+        if plot_learning_curve:
+            self.plot_results()
+        if final_model_path is not None:
+            self.model.save(final_model_path)
+    
+    def plot_results(self):
+        # summarize history for accuracy
+        plt.subplot(211)
+        plt.plot(self.history.history['acc'])
+        plt.plot(self.history.history['val_acc'])
+        plt.title('model accuracy')
+        plt.ylabel('accuracy')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
         
-        def plot_results(self):
-            # summarize history for accuracy
-            plt.subplot(211)
-            plt.plot(self.history.history['acc'])
-            plt.plot(self.history.history['val_acc'])
-            plt.title('model accuracy')
-            plt.ylabel('accuracy')
-            plt.xlabel('epoch')
-            plt.legend(['train', 'test'], loc='upper left')
-            
-            # summarize history for loss
-            plt.subplot(212)
-            plt.plot(self.history.history['val_loss'])
-            plt.plot(self.history.history['loss'])
-            plt.title('model loss')
-            plt.ylabel('loss')
-            plt.xlabel('epoch')
-            plt.legend(['train', 'test'], loc='upper left')
-            plt.show()
+        # summarize history for loss
+        plt.subplot(212)
+        plt.plot(self.history.history['val_loss'])
+        plt.plot(self.history.history['loss'])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'test'], loc='upper left')
+        plt.show()

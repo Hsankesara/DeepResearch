@@ -5,7 +5,7 @@ from keras.engine.topology import Layer
 from keras import initializers as initializers, regularizers, constraints
 from keras.callbacks import Callback, ModelCheckpoint
 from keras.utils.np_utils import to_categorical
-from keras.layers import Embedding, Input, Dense, LSTM, GRU, Bidirectional, TimeDistributed
+from keras.layers import Embedding, Input, Dense, LSTM, GRU, Bidirectional, TimeDistributed, Dropout
 from keras import backend as K  
 from keras import optimizers
 from keras.models import Model
@@ -18,6 +18,7 @@ from nltk import tokenize
 from attention_with_context import AttentionWithContext
 from sklearn.utils import shuffle
 import re
+import time
 
 class HAN(object):
     def __init__(self, text, labels, pretrained_embedded_vector_path, max_features, max_senten_len, max_senten_num, embedding_size, num_categories=None, validation_split=0.2, verbose=0):
@@ -32,6 +33,17 @@ class HAN(object):
             self.text = pd.Series(text)
             self.categories = pd.Series(labels)
             self.classes = self.categories.unique().tolist()
+            self.hyperparameters = {
+                'l2_regulizer': None,
+                'dropout_regulizer' : None,
+                'rnn' : LSTM,
+                'rnn_units' : 150,
+                'dense_units': 200,
+                'activation' : 'softmax',
+                'optimizer' : 'adam',
+                'metrics' : ['acc'],
+                'loss': 'categorical_crossentropy'
+            }
             if num_categories is not None:
                 assert (num_categories == len(self.classes))
             assert (self.text.shape[0] == self.categories.shape[0])
@@ -41,7 +53,20 @@ class HAN(object):
             self.set_model()
         except AssertionError:
             print('Input and label data must be of same size')
-
+    
+    def set_hyperparameters(self, tweaked_instances):
+        for  key, value in tweaked_instances.items():
+            if key in self.hyperparameters:
+                self.hyperparameters[key] = value
+            else:
+                raise KeyError(key + ' does not exist in hyperparameters')
+            self.set_model()
+    
+    def show_hyperparameters(self):
+        print('Hyperparameter\tCorresponding Value')
+        for key, value in self.hyperparameters.items():
+            print(key, '\t\t', value)
+        
     def clean_string(self, string):
         """
         Tokenization/string cleaning for dataset
@@ -51,6 +76,14 @@ class HAN(object):
         string = re.sub(r"\'", "", string)
         string = re.sub(r"\"", "", string)
         return string.strip().lower()
+    
+    def add_dataset(self, text, labels):
+        try:
+            self.text = pd.concat([self.text, pd.Series(text)])
+            self.categories = pd.concat([self.categories, pd.Series(labels)])
+            assert (len(self.classes) == self.categories.unique().tolist())
+        except AssertionError:
+            print("New class cannot be added in this way")
     
     def preprocessing(self):
         paras = []
@@ -144,21 +177,35 @@ class HAN(object):
         return Embedding(len(self.word_index) + 1, self.embed_size, weights=[embedding_matrix], input_length=self.max_senten_len, trainable=False)
 
     def set_model(self):
+        if self.hyperparameters['l2_regulizer'] is None:
+            kernel_regularizer = None
+        else:
+            kernel_regularizer = regularizers.l2(self.hyperparameters['l2_regulizer'])
+        if self.hyperparameters['dropout_regulizer'] is None:
+            dropout_regularizer = 1
+        else:
+            dropout_regularizer = self.hyperparameters['dropout_regulizer']
         word_input = Input(shape=(self.max_senten_len,), dtype='float32')
         word_sequences = self.get_embedding_layer()(word_input)
-        word_lstm = Bidirectional(LSTM(100, return_sequences=True))(word_sequences)
-        word_dense = TimeDistributed(Dense(200))(word_lstm)
+        word_lstm = Bidirectional(
+            self.hyperparameters['rnn'](self.hyperparameters['rnn_units'], return_sequences=True, kernel_regularizer=kernel_regularizer))(word_sequences)
+        word_dense = TimeDistributed(
+            Dense(self.hyperparameters['dense_units'], kernel_regularizer=kernel_regularizer))(word_lstm)
         word_att = AttentionWithContext()(word_dense)
         wordEncoder = Model(word_input, word_att)
 
         sent_input = Input(shape=(self.max_senten_num, self.max_senten_len), dtype='float32')
         sent_encoder = TimeDistributed(wordEncoder)(sent_input)
-        sent_lstm = Bidirectional(LSTM(100, return_sequences=True))(sent_encoder)
-        sent_dense = TimeDistributed(Dense(200))(sent_lstm)
-        sent_att = AttentionWithContext()(sent_dense)
+        sent_lstm = Bidirectional(self.hyperparameters['rnn'](
+            self.hyperparameters['rnn_units'], return_sequences=True, kernel_regularizer=kernel_regularizer))(sent_encoder)
+        sent_dense = TimeDistributed(
+            Dense(self.hyperparameters['dense_units'], kernel_regularizer=kernel_regularizer))(sent_lstm)
+        sent_att = Dropout(dropout_regularizer)(
+            AttentionWithContext()(sent_dense))
         preds = Dense(len(self.classes))(sent_att)
         self.model = Model(sent_input, preds)
-        self.model.compile(loss='categorical_crossentropy',optimizer='adam', metrics=['accuracy'])
+        self.model.compile(
+            loss=self.hyperparameters['loss'], optimizer=self.hyperparameters['optimizer'], metrics=self.hyperparameters['metrics'])
         
     def train_model(self, epochs, batch_size, best_model_path = None, final_model_path = None, plot_learning_curve = True):
         if best_model_path is not None:
@@ -188,3 +235,5 @@ class HAN(object):
         plt.xlabel('epoch')
         plt.legend(['train', 'test'], loc='upper left')
         plt.show()
+        time.sleep(10)
+        plt.close()

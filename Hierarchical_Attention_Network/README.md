@@ -1,1 +1,5 @@
 # Hierarchical Attention Network
+
+Since the uprising of Deep learning and Natural Language Processing, text classification has become one of the most staggering tasks to accomplish. In layman terms, We can say Artificial Intelligence is a field which tries to achieve human-like intelligent models to ease the jobs for all of us. All of us has an astounding proficiency in text classification. But even many sophisticated NLP models are failed to achieve such proficiency. So the question arises is that what we humans do differently? How do we classify text?
+
+First of all we understand words not each and every word but many of them and we can guess even unknown words just by the structure of the sentence. Then we understand the message that those series of words (sentences) conveys. Then from those series of sentences, we understand the meaning of a paragraph. The similar approach is used in Hierarchical Attention model.

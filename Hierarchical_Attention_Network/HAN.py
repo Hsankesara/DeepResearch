@@ -21,7 +21,23 @@ import re
 import time
 
 class HAN(object):
+    """
+    HAN model is implemented here.
+    """
     def __init__(self, text, labels, pretrained_embedded_vector_path, max_features, max_senten_len, max_senten_num, embedding_size, num_categories=None, validation_split=0.2, verbose=0):
+        """Initialize the HAN module
+        Keyword arguments:
+        text -- list of the articles for training.
+        labels -- labels corresponding the given `text`.
+        pretrained_embedded_vector_path -- path of any pretrained vector
+        max_features -- max features embeddeding matrix can have. To more checkout https://keras.io/layers/embeddings/
+        max_senten_len -- maximum sentence length. It is recommended not to use the maximum one but the one that covers 0.95 quatile of the data.
+        max_senten_num -- maximum number of sentences. It is recommended not to use the maximum one but the one that covers 0.95 quatile of the data.
+        embedding_size -- size of the embedding vector
+        num_categories -- total number of categories.
+        validation_split -- train-test split. 
+        verbose -- how much you want to see.
+        """
         try:
             self.verbose = verbose
             self.max_features = max_features
@@ -33,6 +49,8 @@ class HAN(object):
             self.text = pd.Series(text)
             self.categories = pd.Series(labels)
             self.classes = self.categories.unique().tolist()
+            # Initialize default hyperparameters
+            # You can change it using `set_hyperparameters` function 
             self.hyperparameters = {
                 'l2_regulizer': None,
                 'dropout_regulizer' : None,
@@ -55,6 +73,10 @@ class HAN(object):
             print('Input and label data must be of same size')
     
     def set_hyperparameters(self, tweaked_instances):
+        """Set hyperparameters of HAN model.
+        Keywords arguemnts:
+        tweaked_instances -- dictionary of all those keys you want to change
+        """
         for  key, value in tweaked_instances.items():
             if key in self.hyperparameters:
                 self.hyperparameters[key] = value
@@ -63,6 +85,8 @@ class HAN(object):
             self.set_model()
     
     def show_hyperparameters(self):
+        """To check the values of all the current hyperparameters
+        """
         print('Hyperparameter\tCorresponding Value')
         for key, value in self.hyperparameters.items():
             print(key, '\t\t', value)
@@ -83,9 +107,11 @@ class HAN(object):
             self.categories = pd.concat([self.categories, pd.Series(labels)])
             assert (len(self.classes) == self.categories.unique().tolist())
         except AssertionError:
-            print("New class cannot be added in this way")
+            print("New class cannot be added in this manner")
     
     def preprocessing(self):
+        """Preprocessing of the text to make it more resonant for training
+        """
         paras = []
         labels = []
         texts = []
@@ -137,27 +163,36 @@ class HAN(object):
         return x_train, y_train, x_val, y_val
     
     def get_model(self):
+        """
+        Returns the HAN model so that it can be used as a part of pipeline
+        """
         return self.model
     
     def add_glove_model(self):
+        """
+        Read and save Pretrained Embedding model
+        """
         embeddings_index = {}
         try:
             f = open(self.embedded_dir)
             for line in f:
-                try:
-                    values = line.split()
-                    word = values[0]
-                    coefs = np.asarray(values[1:], dtype='float32')
-                    embeddings_index[word] = coefs
-                except:
-                    pass
+                values = line.split()
+                word = values[0]
+                coefs = np.asarray(values[1:], dtype='float32')
+                assert (coefs.shape[0] == self.embed_size)
+                embeddings_index[word] = coefs
             f.close()
         except OSError:
             print('Embedded file does not found')
             exit()
+        except AssertionError:
+            print("Embedding vector size does not match with given embedded size")
         return embeddings_index
     
     def get_embedding_matrix(self):
+        """
+        Returns Embedding matrix
+        """
         embedding_matrix = np.random.random((len(self.word_index) + 1, self.embed_size))
         absent_words = 0
         for word, i in self.word_index.items():
@@ -173,10 +208,16 @@ class HAN(object):
         return embedding_matrix
     
     def get_embedding_layer(self):
+        """
+        Returns Embedding layer
+        """
         embedding_matrix = self.get_embedding_matrix()
         return Embedding(len(self.word_index) + 1, self.embed_size, weights=[embedding_matrix], input_length=self.max_senten_len, trainable=False)
 
     def set_model(self):
+        """
+        Set the HAN model according to the given hyperparameters
+        """
         if self.hyperparameters['l2_regulizer'] is None:
             kernel_regularizer = None
         else:
@@ -208,6 +249,13 @@ class HAN(object):
             loss=self.hyperparameters['loss'], optimizer=self.hyperparameters['optimizer'], metrics=self.hyperparameters['metrics'])
         
     def train_model(self, epochs, batch_size, best_model_path = None, final_model_path = None, plot_learning_curve = True):
+        """Training the model
+        epochs -- Total number of epochs
+        batch_size -- size of a batch
+        best_model_path -- path to save best model i.e. weights with lowest validation score.
+        final_model_path -- path to save final model i.e. final weights
+        plot_learning_curve -- Want to checkout Learning curve
+        """
         if best_model_path is not None:
             checkpoint = ModelCheckpoint(best_model_path, verbose=0, monitor='val_loss', save_best_only=True, mode='auto')
         self.history = self.model.fit(self.x_train, self.y_train, validation_data=(self.x_val, self.y_val), epochs=epochs, batch_size=batch_size, verbose = self.verbose, callbacks = [checkpoint])
@@ -217,6 +265,9 @@ class HAN(object):
             self.model.save(final_model_path)
     
     def plot_results(self):
+        """
+        Plotting learning curve of last trained model. 
+        """
         # summarize history for accuracy
         plt.subplot(211)
         plt.plot(self.history.history['acc'])

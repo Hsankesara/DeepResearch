@@ -14,6 +14,9 @@ def show_help():
     pass
 
 def main():
+    """
+    A small tutorial to use HAN module
+    """
     filename = './News_Category_Dataset/News_Category_Dataset.json'
     df = shuffle(pd.read_json(
         filename, lines=True))[:500].reset_index()

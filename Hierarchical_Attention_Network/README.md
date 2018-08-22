@@ -30,7 +30,7 @@ import HAN
 ```python
 han_network = HAN.HAN(text = df.text, labels = df.category, num_categories = total_categories, pretrained_embedded_vector_path = embedded_vector_path, max_features = max_num_of_features, max_senten_len = max_sentence_len, max_senten_num = max_sentence_num , embedding_size = size_of_embedded_vectors)
 ```
-* Tweak hyperparameters using ```set_hyperparametes``` of HAN object.
+* Tweak hyperparameters using ```set_hyperparametes()``` function of HAN object.
 > To know more checkout [run_han.py]('./run_han.py')
 
 ## Dataset courtesy

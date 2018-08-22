@@ -21,11 +21,12 @@ def main():
     df = shuffle(pd.read_json(
         filename, lines=True))[:500].reset_index()
     df = preprocessing(df)
-    han_network = HAN.HAN(text = df.text, labels = df.category, num_categories = 30, pretrained_embedded_vector_path = '../../glove.6B/glove.6B.100d.txt', max_features = 200000, max_senten_len = 150, max_senten_num = 4 , embedding_size = 100, validation_split=0.2, verbose=1)
+    han_network = HAN.HAN(text = df.text, labels = df.category, num_categories = 30, pretrained_embedded_vector_path = './glove.6B/glove.6B.100d.txt', max_features = 200000, max_senten_len = 150, max_senten_num = 4 , embedding_size = 100, validation_split=0.2, verbose=1)
     print(han_network.get_model().summary())
     han_network.show_hyperparameters()
     ## How to change hyperparameters
-    # Let's add regularizer
+    # Let's add regularizers
+    # To replace a hyperparameter change the corresponding key value to the new value in set_hyperparameters
     han_network.set_hyperparameters({'l2_regulizer': 1e-13, 'dropout_regulizer': 0.5})
     han_network.show_hyperparameters()
     print(han_network.get_model().summary())

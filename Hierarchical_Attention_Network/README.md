@@ -36,8 +36,9 @@ han_network = HAN.HAN(text = df.text, labels = df.category, num_categories = tot
 ## Dataset courtesy
 [News Category Dataset](https://www.kaggle.com/rmisra/news-category-dataset)
 
-## Implementaation
+## Implementation
 Go to [this](https://www.kaggle.com/hsankesara/news-classification-using-han) to checkout implementation and functioning of HAN Networks.
 
 ## Project Manager
-[Heet Sankesara]('https://github.com/Hsankesara')
+
+**[Heet Sankesara](https://github.com/Hsankesara)**

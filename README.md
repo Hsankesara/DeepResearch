@@ -7,7 +7,7 @@ DeepResearch is the collection of new and prolific algorithms in the field of **
 ## Papers
 |Paper|Code|Tutorial|Any Other links|
 |-----|----|--------|---------------|
-|[Hierarchical Attention Networks](http://www.cs.cmu.edu/~./hovy/papers/16HLT-hierarchical-attention-networks.pdf)|[code](Hierarchical_Attention_Network/) | | |
+|[Hierarchical Attention Networks](http://www.cs.cmu.edu/~./hovy/papers/16HLT-hierarchical-attention-networks.pdf)|[code](Hierarchical_Attention_Network/) |[Hierarchical Attention Networks](https://medium.com/@heetsankesara3/hierarchical-attention-networks-d220318cf87e) | [News Classification using HAN](https://www.kaggle.com/hsankesara/news-classification-using-han)|
 
 ## Project Manager
 **[Heet Sankesara](https://github.com/Hsankesara)**

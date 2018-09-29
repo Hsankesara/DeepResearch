@@ -130,7 +130,7 @@ class HAN(object):
                     wordTokens = text_to_word_sequence(sent)
                     k = 0
                     for _, word in enumerate(wordTokens):
-                        if k < self.max_senten_len and tokenizer.word_index[word] < self.max_features:
+                        if k < self.max_senten_len and word in tokenizer.word_index and tokenizer.word_index[word] < self.max_features:
                             data[i, j, k] = tokenizer.word_index[word]
                             k = k+1
         self.word_index = tokenizer.word_index

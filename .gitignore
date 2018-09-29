@@ -1,2 +1,4 @@
 *.h5
 *.pyc
+*/__pycache__
+.vscode

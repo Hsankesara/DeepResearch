@@ -1,4 +1,4 @@
 *.h5
 *.pyc
-__pycache__/
+Hierarchical_Attention_Network/__pycache__/
 .vscode

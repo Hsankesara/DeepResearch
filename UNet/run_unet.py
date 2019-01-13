@@ -9,8 +9,10 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import gc
 from Unet import UNet
+import torch
+import sys
 gc.collect()
-
+use_gpu = torch.cuda.is_available()
 
 def thresh(x):
     if x == 0:
@@ -20,7 +22,7 @@ def thresh(x):
 
 thresh = np.vectorize(thresh, otypes=[np.float])
 
-def create_dataset(paths, width_in, height_in, width_out, height_out):
+def create_dataset(paths, width_in, height_in, width_out, height_out, data_indexes, mat):
     x = []
     y = []
     for path in tqdm(paths):
@@ -39,19 +41,21 @@ def create_dataset(paths, width_in, height_in, width_out, height_out):
     return np.array(x), np.array(y)
 
 def get_dataset(width_in, height_in, width_out, height_out):
-    input_path = os.path.join('2015_boe_chiu', '2015_BOE_Chiu')
-    subject_path = [os.path.join(input_path, 'Subject_0{}.mat'.format(i)) for i in range(1, 10)] + [os.path.join(input_path, 'Subject_10.mat')]
+    input_path = os.path.join('2015_BOE_Chiu')
+    #subject_path = [os.path.join(input_path, 'Subject_0{}.mat'.format(i)) for i in range(1, 10)] + [os.path.join(input_path, 'Subject_10.mat')]
+    subject_path = [os.path.join(input_path, 'Subject_0{}.mat'.format(i)) for i in range(1, 3)]
+    m = len(subject_path)
     data_indexes = [10, 15, 20, 25, 28, 30, 32, 35, 40, 45, 50]
     mat = scipy.io.loadmat(subject_path[0])
     img_tensor = mat['images']
     manual_fluid_tensor_1 = mat['manualFluid1']
     img_array = np.transpose(img_tensor, (2, 0, 1))
     manual_fluid_array = np.transpose(manual_fluid_tensor_1, (2, 0, 1))
-    x_train, y_train = create_dataset(subject_path[:9], width_in, height_in, width_out, height_out)
-    x_val, y_val = create_dataset(subject_path[9:], width_in, height_in, width_out, height_out)
+    x_train, y_train = create_dataset(subject_path[:m-1], width_in, height_in, width_out, height_out, data_indexes, mat)
+    x_val, y_val = create_dataset(subject_path[m-1:], width_in, height_in, width_out, height_out, data_indexes, mat)
     return x_train, y_train,x_val,y_val
 
-def train_step(inputs, labels, optimizer, criterion):
+def train_step(inputs, labels, optimizer, criterion, unet, width_out, height_out, batch_size):
     optimizer.zero_grad()
     # forward + backward + optimize
     outputs = unet(inputs)
@@ -65,7 +69,7 @@ def train_step(inputs, labels, optimizer, criterion):
     optimizer.step()
     return loss
 
-def get_val_loss(x_val, y_val):
+def get_val_loss(x_val, y_val, width_out, height_out, unet):
     x_val = torch.from_numpy(x_val).float()
     y_val = torch.from_numpy(y_val).long()
     if use_gpu:
@@ -81,7 +85,7 @@ def get_val_loss(x_val, y_val):
     loss = F.cross_entropy(outputs, labels)
     return loss.data
 
-def train(unet, batch_size, epochs, epoch_lapse, threshold, learning_rate, criterion, optimizerg):
+def train(unet, batch_size, epochs, epoch_lapse, threshold, learning_rate, criterion, optimizer, x_train, y_train, x_val, y_val):
     epoch_iter = np.ceil(x_train.shape[0] / batch_size).astype(int)
     t = trange(epochs, leave=True)
     for _ in t:
@@ -92,14 +96,14 @@ def train(unet, batch_size, epochs, epoch_lapse, threshold, learning_rate, crite
             if use_gpu:
                 batch_train_x = batch_train_x.cuda()
                 batch_train_y = batch_train_y.cuda()
-            batch_loss = train_step(batch_train_x , batch_train_y, optimizer, criterion)
+            batch_loss = train_step(batch_train_x , batch_train_y, optimizer, criterion, unet, width_out, height_out)
             total_loss += batch_loss
         if (_+1) % epoch_lapse == 0:
-            val_loss = get_val_loss(x_val, y_val)
-            print(f"Total loss in epoch {_+1} : {total_loss} and validation loss : {val_loss}")
+            val_loss = get_val_loss(x_val, y_val, width_out, height_out, unet)
+            print("Total loss in epoch %f : %f and validation loss : %f" %(_+1, total_loss, val_loss))
     gc.collect()
 
-def plot_examples(datax, datay, num_examples=3):
+def plot_examples(unet, datax, datay, num_examples=3):
     fig, ax = plt.subplots(nrows=3, ncols=4, figsize=(18,4*num_examples))
     m = datax.shape[0]
     for row_num in range(num_examples):
@@ -116,23 +120,30 @@ def main():
     height_in = 284
     width_out = 196
     height_out = 196
+    PATH = './unet.pt'
     x_train, y_train, x_val, y_val = get_dataset(width_in, height_in, width_out, height_out)
     print(x_train.shape, y_train.shape, x_val.shape, y_val.shape)
     batch_size = 3
-    epochs = 30
+    epochs = 1
     epoch_lapse = 50
     threshold = 0.5
-    sample_size = None
     learning_rate = 0.01
     unet = UNet(in_channel=1,out_channel=2)
     if use_gpu:
         unet = unet.cuda()
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(unet.parameters(), lr = 0.01, momentum=0.99)
-    train(unet, batch_size, epochs, epoch_lapse, threshold, learning_rate, criterion, optimizer)
-    plot_examples(x_train, y_train)
-    plot_examples(x_val, y_val)
-    unet.save_state_dict('unet.pt')
+    criterion = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(unet.parameters(), lr = 0.01, momentum=0.99)
+    if sys.argv[1] == 'train':
+        train(unet, batch_size, epochs, epoch_lapse, threshold, learning_rate, criterion, optimizer, x_train, y_train, x_val, y_val)
+        pass
+    else:
+        if use_gpu:
+            unet.load_state_dict(torch.load(PATH))
+        else:
+            unet.load_state_dict(torch.load(PATH, map_location='cpu'))
+        print(unet.eval())
+    plot_examples(unet, x_train, y_train)
+    plot_examples(unet, x_val, y_val)
 
 if __name__ == "__main__":
     main()

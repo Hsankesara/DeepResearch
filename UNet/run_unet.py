@@ -6,7 +6,7 @@ import pandas as pd
 import scipy.io
 from skimage.transform import resize
 import matplotlib.pyplot as plt
-from tqdm import tqdm
+from tqdm import tqdm, trange
 import gc
 from Unet import UNet
 import torch
@@ -42,8 +42,8 @@ def create_dataset(paths, width_in, height_in, width_out, height_out, data_index
 
 def get_dataset(width_in, height_in, width_out, height_out):
     input_path = os.path.join('2015_BOE_Chiu')
-    #subject_path = [os.path.join(input_path, 'Subject_0{}.mat'.format(i)) for i in range(1, 10)] + [os.path.join(input_path, 'Subject_10.mat')]
-    subject_path = [os.path.join(input_path, 'Subject_0{}.mat'.format(i)) for i in range(1, 3)]
+    subject_path = [os.path.join(input_path, 'Subject_0{}.mat'.format(i)) for i in range(1, 10)] + [os.path.join(input_path, 'Subject_10.mat')]
+    #subject_path = [os.path.join(input_path, 'Subject_0{}.mat'.format(i)) for i in range(1, 3)]
     m = len(subject_path)
     data_indexes = [10, 15, 20, 25, 28, 30, 32, 35, 40, 45, 50]
     mat = scipy.io.loadmat(subject_path[0])
@@ -55,15 +55,16 @@ def get_dataset(width_in, height_in, width_out, height_out):
     x_val, y_val = create_dataset(subject_path[m-1:], width_in, height_in, width_out, height_out, data_indexes, mat)
     return x_train, y_train,x_val,y_val
 
-def train_step(inputs, labels, optimizer, criterion, unet, width_out, height_out, batch_size):
+def train_step(inputs, labels, optimizer, criterion, unet, width_out, height_out):
     optimizer.zero_grad()
     # forward + backward + optimize
     outputs = unet(inputs)
-    # outputs.shape =(batch_size, n_classes, img_cols, img_rows) 
+    # outputs.shape =(batch_size, n_classes, img_cols, img_rows)
     outputs = outputs.permute(0, 2, 3, 1)
-    # outputs.shape =(batch_size, img_cols, img_rows, n_classes) 
-    outputs = outputs.resize(batch_size*width_out*height_out, 2)
-    labels = labels.resize(batch_size*width_out*height_out)
+    # outputs.shape =(batch_size, img_cols, img_rows, n_classes)
+    m = outputs.shape[0]
+    outputs = outputs.resize(m*width_out*height_out, 2)
+    labels = labels.resize(m*width_out*height_out)
     loss = criterion(outputs, labels)
     loss.backward()
     optimizer.step()
@@ -85,7 +86,7 @@ def get_val_loss(x_val, y_val, width_out, height_out, unet):
     loss = F.cross_entropy(outputs, labels)
     return loss.data
 
-def train(unet, batch_size, epochs, epoch_lapse, threshold, learning_rate, criterion, optimizer, x_train, y_train, x_val, y_val):
+def train(unet, batch_size, epochs, epoch_lapse, threshold, learning_rate, criterion, optimizer, x_train, y_train, x_val, y_val, width_out, height_out):
     epoch_iter = np.ceil(x_train.shape[0] / batch_size).astype(int)
     t = trange(epochs, leave=True)
     for _ in t:
@@ -134,7 +135,7 @@ def main():
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(unet.parameters(), lr = 0.01, momentum=0.99)
     if sys.argv[1] == 'train':
-        train(unet, batch_size, epochs, epoch_lapse, threshold, learning_rate, criterion, optimizer, x_train, y_train, x_val, y_val)
+        train(unet, batch_size, epochs, epoch_lapse, threshold, learning_rate, criterion, optimizer, x_train, y_train, x_val, y_val, width_out, height_out)
         pass
     else:
         if use_gpu:

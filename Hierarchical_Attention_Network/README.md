@@ -42,3 +42,5 @@ Go to [this](https://www.kaggle.com/hsankesara/news-classification-using-han) to
 ## Project Manager
 
 **[Heet Sankesara](https://github.com/Hsankesara)**
+
+[<img src="http://i.imgur.com/0o48UoR.png" width="35" padding="10" margin="10">](https://github.com/Hsankesara/)   [<img src="https://i.imgur.com/0IdggSZ.png" width="35" padding="10" margin="10">](https://www.linkedin.com/in/heet-sankesara-72383a152/)    [<img src="http://i.imgur.com/tXSoThF.png" width="35" padding="10" margin="10">](https://twitter.com/heetsankesara3)   [<img src="https://loading.io/s/icon/vzeour.svg" width="35" padding="10" margin="10">](https://www.kaggle.com/hsankesara)

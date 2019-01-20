@@ -5,6 +5,9 @@ import torch.optim as optim
 
 class UNet(nn.Module):
     def contracting_block(self, in_channels, out_channels, kernel_size=3):
+        """
+        This function creates one contracting block
+        """
         block = torch.nn.Sequential(
                     torch.nn.Conv2d(kernel_size=kernel_size, in_channels=in_channels, out_channels=out_channels),
                     torch.nn.ReLU(),
@@ -14,8 +17,11 @@ class UNet(nn.Module):
                     torch.nn.BatchNorm2d(out_channels),
                 )
         return block
-    
+
     def expansive_block(self, in_channels, mid_channel, out_channels, kernel_size=3):
+         """
+        This function creates one expansive block
+        """
             block = torch.nn.Sequential(
                     torch.nn.Conv2d(kernel_size=kernel_size, in_channels=in_channels, out_channels=mid_channel),
                     torch.nn.ReLU(),
@@ -26,21 +32,24 @@ class UNet(nn.Module):
                     torch.nn.ConvTranspose2d(in_channels=mid_channel, out_channels=out_channels, kernel_size=3, stride=2, padding=1, output_padding=1)
                     )
             return  block
-    
+
     def final_block(self, in_channels, mid_channel, out_channels, kernel_size=3):
-            block = torch.nn.Sequential(
-                    torch.nn.Conv2d(kernel_size=kernel_size, in_channels=in_channels, out_channels=mid_channel),
-                    torch.nn.ReLU(),
-                    torch.nn.BatchNorm2d(mid_channel),
-                    torch.nn.Conv2d(kernel_size=kernel_size, in_channels=mid_channel, out_channels=mid_channel),
-                    torch.nn.ReLU(),
-                    torch.nn.BatchNorm2d(mid_channel),
-                    torch.nn.Conv2d(kernel_size=kernel_size, in_channels=mid_channel, out_channels=out_channels, padding=1),
-                    torch.nn.ReLU(),
-                    torch.nn.BatchNorm2d(out_channels),
-                    )
-            return  block
-    
+         """
+        This returns final block
+        """
+        block = torch.nn.Sequential(
+                torch.nn.Conv2d(kernel_size=kernel_size, in_channels=in_channels, out_channels=mid_channel),
+                torch.nn.ReLU(),
+                torch.nn.BatchNorm2d(mid_channel),
+                torch.nn.Conv2d(kernel_size=kernel_size, in_channels=mid_channel, out_channels=mid_channel),
+                torch.nn.ReLU(),
+                torch.nn.BatchNorm2d(mid_channel),
+                torch.nn.Conv2d(kernel_size=kernel_size, in_channels=mid_channel, out_channels=out_channels, padding=1),
+                torch.nn.ReLU(),
+                torch.nn.BatchNorm2d(out_channels),
+                )
+        return  block
+
     def __init__(self, in_channel, out_channel):
         super(UNet, self).__init__()
         #Encode
@@ -64,13 +73,16 @@ class UNet(nn.Module):
         self.conv_decode3 = self.expansive_block(512, 256, 128)
         self.conv_decode2 = self.expansive_block(256, 128, 64)
         self.final_layer = self.final_block(128, 64, out_channel)
-        
+
     def crop_and_concat(self, upsampled, bypass, crop=False):
+        """
+        This layer crop the layer from contraction block and concat it with expansive block vector
+        """
         if crop:
             c = (bypass.size()[2] - upsampled.size()[2]) // 2
             bypass = F.pad(bypass, (-c, -c, -c, -c))
         return torch.cat((upsampled, bypass), 1)
-    
+
     def forward(self, x):
         # Encode
         encode_block1 = self.conv_encode1(x)

@@ -6,7 +6,7 @@ from keras import initializers as initializers, regularizers, constraints
 from keras.callbacks import Callback, ModelCheckpoint
 from keras.utils.np_utils import to_categorical
 from keras.layers import Embedding, Input, Dense, LSTM, GRU, Bidirectional, TimeDistributed, Dropout
-from keras import backend as K  
+from keras import backend as K
 from keras import optimizers
 from keras.models import Model
 import nltk
@@ -71,7 +71,7 @@ class HAN(object):
             self.set_model()
         except AssertionError:
             print('Input and label data must be of same size')
-    
+
     def set_hyperparameters(self, tweaked_instances):
         """Set hyperparameters of HAN model.
         Keywords arguemnts:
@@ -83,14 +83,14 @@ class HAN(object):
             else:
                 raise KeyError(key + ' does not exist in hyperparameters')
             self.set_model()
-    
+
     def show_hyperparameters(self):
         """To check the values of all the current hyperparameters
         """
         print('Hyperparameter\tCorresponding Value')
         for key, value in self.hyperparameters.items():
             print(key, '\t\t', value)
-        
+
     def clean_string(self, string):
         """
         Tokenization/string cleaning for dataset
@@ -100,7 +100,7 @@ class HAN(object):
         string = re.sub(r"\'", "", string)
         string = re.sub(r"\"", "", string)
         return string.strip().lower()
-    
+
     def add_dataset(self, text, labels):
         try:
             self.text = pd.concat([self.text, pd.Series(text)])
@@ -108,7 +108,7 @@ class HAN(object):
             assert (len(self.classes) == self.categories.unique().tolist())
         except AssertionError:
             print("New class cannot be added in this manner")
-    
+
     def preprocessing(self):
         """Preprocessing of the text to make it more resonant for training
         """
@@ -143,7 +143,7 @@ class HAN(object):
         assert (len(self.classes) == labels.shape[1])
         assert (data.shape[0] == labels.shape[0])
         return data, labels
-    
+
     def split_dataset(self):
         indices = np.arange(self.data.shape[0])
         np.random.shuffle(indices)
@@ -161,13 +161,13 @@ class HAN(object):
             print(y_train.sum(axis=0).tolist())
             print(y_val.sum(axis=0).tolist())
         return x_train, y_train, x_val, y_val
-    
+
     def get_model(self):
         """
         Returns the HAN model so that it can be used as a part of pipeline
         """
         return self.model
-    
+
     def add_glove_model(self):
         """
         Read and save Pretrained Embedding model
@@ -188,7 +188,7 @@ class HAN(object):
         except AssertionError:
             print("Embedding vector size does not match with given embedded size")
         return embeddings_index
-    
+
     def get_embedding_matrix(self):
         """
         Returns Embedding matrix
@@ -206,7 +206,7 @@ class HAN(object):
             print('Total absent words are', absent_words, 'which is', "%0.2f" %
                 (absent_words * 100 / len(self.word_index)), '% of total words')
         return embedding_matrix
-    
+
     def get_embedding_layer(self):
         """
         Returns Embedding layer
@@ -263,10 +263,10 @@ class HAN(object):
             self.plot_results()
         if final_model_path is not None:
             self.model.save(final_model_path)
-    
+
     def plot_results(self):
         """
-        Plotting learning curve of last trained model. 
+        Plotting learning curve of last trained model.
         """
         # summarize history for accuracy
         plt.subplot(211)
@@ -276,7 +276,6 @@ class HAN(object):
         plt.ylabel('accuracy')
         plt.xlabel('epoch')
         plt.legend(['train', 'test'], loc='upper left')
-        
         # summarize history for loss
         plt.subplot(212)
         plt.plot(self.history.history['val_loss'])

@@ -40,7 +40,7 @@ loss.backward()
 optimizer.step()
 ```
 
-> To know more checkout [run_unet.py](run_han.py)
+> To know more checkout [run_unet.py](run_unet.py)
 
 ## Implementation
 Go to [this](https://www.kaggle.com/hsankesara/unet-image-segmentation) to checkout implementation and functioning of Unet Networks.

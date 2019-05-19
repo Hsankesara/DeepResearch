@@ -1,3 +1,13 @@
+import torch
+import torchvision
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torch.autograd import Variable
+from tqdm import trange
+from time import sleep
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder
+
 class Net(nn.Module):
     """
     Image2Vector CNN which takes image of dimension (28x28x3) and return column vector length 64
@@ -27,6 +37,7 @@ class Net(nn.Module):
         x = self.convnet4(x)
         x = torch.flatten(x, start_dim=1)
         return x
+
 
 class PrototypicalNet(nn.Module):
     def __init__(self, use_gpu=False):

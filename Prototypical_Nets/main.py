@@ -6,27 +6,8 @@ import cv2
 from tqdm import tqdm
 import multiprocessing as mp
 from preprocessing import read_images
-from prototypicalNet import PrototypicalNet
+from prototypicalNet import PrototypicalNet, train_step, test_step
 tqdm.pandas(desc="my bar!")
-
-
-def train_step(datax, datay, Ns, Nc, Nq):
-    optimizer.zero_grad()
-    Qx, Qy = protonet(datax, datay, Ns, Nc, Nq, np.unique(datay))
-    pred = torch.log_softmax(Qx, dim=-1)
-    loss = F.nll_loss(pred, Qy)
-    loss.backward()
-    optimizer.step()
-    acc = torch.mean((torch.argmax(pred, 1) == Qy).float())
-    return loss, acc
-
-
-def test_step(datax, datay, Ns, Nc, Nq):
-    Qx, Qy = protonet(datax, datay, Ns, Nc, Nq, np.unique(datay))
-    pred = torch.log_softmax(Qx, dim=-1)
-    loss = F.nll_loss(pred, Qy)
-    acc = torch.mean((torch.argmax(pred, 1) == Qy).float())
-    return loss, acc
 
 
 def main():

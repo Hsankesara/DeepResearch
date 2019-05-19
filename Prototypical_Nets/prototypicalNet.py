@@ -8,6 +8,7 @@ from tqdm import trange
 from time import sleep
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 
+
 class Net(nn.Module):
     """
     Image2Vector CNN which takes image of dimension (28x28x3) and return column vector length 64
@@ -151,3 +152,30 @@ class PrototypicalNet(nn.Module):
         Qx = torch.pairwise_distance(centroid_matrix.transpose(
             1, 2), Query_matrix.transpose(1, 2))
         return Qx
+
+
+def train_step(datax, datay, Ns, Nc, Nq):
+    optimizer.zero_grad()
+    Qx, Qy = protonet(datax, datay, Ns, Nc, Nq, np.unique(datay))
+    pred = torch.log_softmax(Qx, dim=-1)
+    loss = F.nll_loss(pred, Qy)
+    loss.backward()
+    optimizer.step()
+    acc = torch.mean((torch.argmax(pred, 1) == Qy).float())
+    return loss, acc
+
+
+def test_step(datax, datay, Ns, Nc, Nq):
+    Qx, Qy = protonet(datax, datay, Ns, Nc, Nq, np.unique(datay))
+    pred = torch.log_softmax(Qx, dim=-1)
+    loss = F.nll_loss(pred, Qy)
+    acc = torch.mean((torch.argmax(pred, 1) == Qy).float())
+    return loss, acc
+
+
+def load_weights(filename, protonet, use_gpu):
+    if use_gpu:
+        protonet.load_state_dict(torch.load(filename))
+    else:
+        protonet.load_state_dict(torch.load(filename), map_location='cpu')
+    return protonet

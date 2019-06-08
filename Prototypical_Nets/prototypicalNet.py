@@ -154,7 +154,7 @@ class PrototypicalNet(nn.Module):
         return Qx
 
 
-def train_step(datax, datay, Ns, Nc, Nq):
+def train_step(protonet, datax, datay, Ns, Nc, Nq):
     optimizer.zero_grad()
     Qx, Qy = protonet(datax, datay, Ns, Nc, Nq, np.unique(datay))
     pred = torch.log_softmax(Qx, dim=-1)
@@ -165,7 +165,7 @@ def train_step(datax, datay, Ns, Nc, Nq):
     return loss, acc
 
 
-def test_step(datax, datay, Ns, Nc, Nq):
+def test_step(protonet, datax, datay, Ns, Nc, Nq):
     Qx, Qy = protonet(datax, datay, Ns, Nc, Nq, np.unique(datay))
     pred = torch.log_softmax(Qx, dim=-1)
     loss = F.nll_loss(pred, Qy)

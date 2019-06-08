@@ -76,6 +76,7 @@ Or simply train one by yourself
 To know more checkout [this](main.py)
 
 Want to use a customized model?
+
 No worries, simply download the code and make suitable changes [here](prototypicalNet.py)
 
 ## Project Manager

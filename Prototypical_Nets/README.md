@@ -4,9 +4,9 @@
 
 The change occurred in our life after the expeditious growth in AI and deep learning, in particular, is a solid example of this. The research is booming at unprecedented speed and lives of thousands of people have been improved. If AI is the new electricity then definitely data is the new coal. But recently we’ve seen hazardous depletion in the amount of coal in our environment. This resulted in the development of new technologies which needed a fraction of coal or even no coal at all. Similarly, there are many applications in artificial intelligence where we only have meager data or even no data at all. Hence, we need new techniques to perform well in them. Such problems resulted in the growth of a very popular field, the field of N-shot learning.
 
-To know about it more, go to my blog at [coming soon]('').
+To know about it more, go to my blog at [coming soon]().
 
-To check out how this works, go to my notebook at [kaggle]('https://www.kaggle.com/hsankesara/prototypical-net/)
+To check out how this works, go to my notebook at [kaggle](https://www.kaggle.com/hsankesara/prototypical-net/)
 
 <table>
     <tr>

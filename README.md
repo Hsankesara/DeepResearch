@@ -9,7 +9,7 @@ DeepResearch is the collection of new and prolific algorithms in the field of **
 |-----|----|--------|---------------|
 |[Hierarchical Attention Networks](http://www.cs.cmu.edu/~./hovy/papers/16HLT-hierarchical-attention-networks.pdf)|[code](Hierarchical_Attention_Network/) |[Hierarchical Attention Networks](https://medium.com/@heetsankesara3/hierarchical-attention-networks-d220318cf87e) | [News Classification using HAN](https://www.kaggle.com/hsankesara/news-classification-using-han)|
 |[Unet](https://arxiv.org/pdf/1505.04597.pdf)|[code](UNet/)|[UNet-Introducing Symmetry in Segmentation](https://towardsdatascience.com/u-net-b229b32b4a71)|[Unet- Image Segmentation](https://www.kaggle.com/hsankesara/unet-image-segmentation)|
-|[Prototypical Networks](https://arxiv.org/pdf/1703.05175)|[code](Prototypical_Nets/)| coming soon| [Kaggle Notebook](https://www.kaggle.com/hsankesara/prototypical-net/)|
+|[Prototypical Networks](https://arxiv.org/pdf/1703.05175)|[code](Prototypical_Nets/)| [N-Shot Learning: Learning More with Less Data](https://blog.floydhub.com/n-shot-learning/)| [Kaggle Notebook](https://www.kaggle.com/hsankesara/prototypical-net/)|
 
 ## Project Manager
 

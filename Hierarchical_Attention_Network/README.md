@@ -14,7 +14,7 @@ bash setup.sh
 You can test the module using
 ```bash
 python3 run_han.py
-``` 
+```
 ## How to use the module
 
 * To train, test and save your own model first import the HAN module
@@ -43,4 +43,4 @@ Go to [this](https://www.kaggle.com/hsankesara/news-classification-using-han) to
 
 **[Heet Sankesara](https://github.com/Hsankesara)**
 
-[<img src="http://i.imgur.com/0o48UoR.png" width="35" padding="10" margin="10">](https://github.com/Hsankesara/)   [<img src="https://i.imgur.com/0IdggSZ.png" width="35" padding="10" margin="10">](https://www.linkedin.com/in/heet-sankesara-72383a152/)    [<img src="http://i.imgur.com/tXSoThF.png" width="35" padding="10" margin="10">](https://twitter.com/heetsankesara3)   [<img src="https://loading.io/s/icon/vzeour.svg" width="35" padding="10" margin="10">](https://www.kaggle.com/hsankesara)
+[<img src="http://i.imgur.com/0o48UoR.png" width="35">](https://github.com/Hsankesara/)             [<img src="https://i.imgur.com/0IdggSZ.png" width="35">](https://www.linkedin.com/in/heet-sankesara-72383a152/)             [<img src="http://i.imgur.com/tXSoThF.png" width="35">](https://twitter.com/TheSankesara)               [<img src="https://loading.io/s/icon/vzeour.svg" width="35">](https://www.kaggle.com/hsankesara)                [<img src="https://image.flaticon.com/icons/svg/2111/2111505.svg" width="35">](https://medium.com/@heetsankesara3)

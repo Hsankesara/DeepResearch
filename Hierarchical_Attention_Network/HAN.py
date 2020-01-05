@@ -35,7 +35,7 @@ class HAN(object):
         max_senten_num -- maximum number of sentences. It is recommended not to use the maximum one but the one that covers 0.95 quatile of the data.
         embedding_size -- size of the embedding vector
         num_categories -- total number of categories.
-        validation_split -- train-test split. 
+        validation_split -- train-test split.
         verbose -- how much you want to see.
         """
         try:
@@ -50,7 +50,7 @@ class HAN(object):
             self.categories = pd.Series(labels)
             self.classes = self.categories.unique().tolist()
             # Initialize default hyperparameters
-            # You can change it using `set_hyperparameters` function 
+            # You can change it using `set_hyperparameters` function
             self.hyperparameters = {
                 'l2_regulizer': None,
                 'dropout_regulizer' : None,
@@ -243,11 +243,11 @@ class HAN(object):
             Dense(self.hyperparameters['dense_units'], kernel_regularizer=kernel_regularizer))(sent_lstm)
         sent_att = Dropout(dropout_regularizer)(
             AttentionWithContext()(sent_dense))
-        preds = Dense(len(self.classes))(sent_att)
+        preds = Dense(len(self.classes), activation=self.hyperparameters['activation'])(sent_att)
         self.model = Model(sent_input, preds)
         self.model.compile(
             loss=self.hyperparameters['loss'], optimizer=self.hyperparameters['optimizer'], metrics=self.hyperparameters['metrics'])
-        
+
     def train_model(self, epochs, batch_size, best_model_path = None, final_model_path = None, plot_learning_curve = True):
         """Training the model
         epochs -- Total number of epochs
